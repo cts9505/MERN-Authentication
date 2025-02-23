@@ -78,3 +78,103 @@ export const logout = async (req,res) => {
     res.clearCookie('token');
     return res.status(200).json({success:true,message:'User logged out successfully !'})
 }
+
+export const sendVerifyOtp = async (req,res) => {
+    try{const {userId} = req.body;
+
+    const otp = Math.floor(100000 + Math.random() * 900000);
+ 
+    const user = await userModel.findById(userId);
+
+    if(!user) return res.status(404).json({success:false,message:'User not found !'})
+
+    if(user.isAccountVerified) return res.status(400).json({success:false,message:'Account already verified !'})
+    
+    user.verifyOtp = otp;
+    user.verifyOtpExpiresAt = Date.now() + 5*60*1000;
+    await user.save(); 
+
+    const mailOptions = { 
+        from: process.env.SENDER_EMAIL,
+        to: user.email,
+        subject: 'Account Verification OTP',
+        text: `Hello ${user.name}, Your OTP for account verification is ${otp}.`
+    }
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({success:true,message:'OTP sent successfully !',userId})
+    }
+    catch (error) {
+        return res.status(500).json({success:false,message: error.message})  
+    }
+}        
+
+export const verifyOtp = async (req,res) => {
+    const {userId,otp} = req.body;
+    const user = await
+    userModel.findById(userId);
+    if(!user) return res.status(404).json({success:false,message:'User not found !'})
+    if(user.isAccountVerified) return res.status(400).json({success:false,message:'Account already verified !'})
+    if(!user.verifyOtp || !userId || !otp) return res.status(400).json({success:false,message:'Invalid request !'})
+    try {
+        if(user.verifyOtp !== otp || user.verifyOtp ==='') return res.status(400).json({success:false,message:'Invalid OTP !'})
+        if(user.verifyOtpExpiresAt < Date.now()) return res.status(400).json({success:false,message:'OTP expired !'})
+        user.isAccountVerified = true;
+        user.verifyOtp = '';
+        user.verifyOtpExpiresAt = 0;
+        await user.save();
+        return res.status(200).json({success:true,message:'Account verified successfully !'})
+    }
+    catch (error) {
+        return res.status(500).json({success:false,message: error.message})
+    }
+}
+
+export const sendResetOtp = async (req,res) => {
+    const {email} = req.body;
+    if(!email) return res.status(400).json({success:false,message:'Email is required !'})
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    try {
+    const user = await userModel.findOne({email});
+    if(!user) return res.status(404).json({success:false,message:'User not found !'})
+    user.resetOtp = otp;
+    user.resetOtpExpiresAt = Date.now() + 5*60*1000;
+    await user.save();
+
+    const mailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: email,
+        subject: 'Reset Password OTP',
+        text: `Hello ${user.name}, Your OTP for password reset is ${otp}.`
+    }
+    await transporter.sendMail(mailOptions);
+
+    return res.status(200).json({success:true,message:'OTP sent successfully !',email})
+    }
+    catch (error) {
+        return res.status(500).json({success:false,message: error.message})
+    }
+}
+
+export const resetPassword = async (req,res) => {
+    const {email,newPassword,otp} = req.body;
+    if(!email || !newPassword || !otp) return res.status(400).json({success:false,message:'Invalid request !'})
+    try {
+    const user = await userModel.findOne({email});
+
+    if(!user) return res.status(404).json({success:false,message:'User not found !'})
+    
+    if(user.resetOtp !== otp || user.resetOtp === '') return res.status(400).json({success:false,message:'Invalid OTP !'})
+    if(user.resetOtpExpiresAt < Date.now()) return res.status(400).json({success:false,message:'OTP expired !'})
+    
+    user.password = await bcrypt.hash(newPassword,7);
+    user.resetOtp = '';
+    user.resetOtpExpiresAt = 0;
+    await user.save();
+    
+    return res.status(200).json({success:true,message:'Password reset successfully !'})
+    }
+    catch (error) {
+        return res.status(500).json({success:false,message: error.message})
+    }
+}

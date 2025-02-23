@@ -4,6 +4,7 @@ import cors from "cors";
 import "dotenv/config";
 import connectDB from "./config/db.js";
 import router from "./routes/authRoutes.js";
+import userRouter from "./routes/userRoutes.js";
 
 const app=express();
 
@@ -16,5 +17,5 @@ const PORT =process.env.PORT;
 
 app.get("/",(req,res)=>{res.send("API Working")});
 app.use("/api",router);
-
-app.listen(PORT,()=>{console.log("Server stated at port "+PORT)})
+app.use("/api/user",userRouter);
+app.listen(PORT,()=>{console.log("Server started at port "+PORT)})
