@@ -16,6 +16,6 @@ connectDB();
 const PORT =process.env.PORT;
 
 app.get("/",(req,res)=>{res.send("API Working")});
-app.use("/api",router);
+app.use("/api/auth",router);
 app.use("/api/user",userRouter);
 app.listen(PORT,()=>{console.log("Server started at port "+PORT)})
