@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema({
     isAccountVerified:{
         type:Boolean,
         default: false,
+    },
+    image: {
+        type: String,
+        default:''
     }
 })
 

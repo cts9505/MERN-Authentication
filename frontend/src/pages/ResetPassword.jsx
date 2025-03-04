@@ -61,7 +61,7 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className='flex items-center justify-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-blue-200 to bg-purple-200'>
+    <div className='flex items-center justify-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-gray-50 to bg-gray-100'>
       <Navbar/>
       {/* {email} */}
       {!isEmailSent &&

@@ -1,4 +1,4 @@
-import React, { use, useContext } from 'react'
+import React, { use, useContext, useEffect } from 'react'
 import {assets} from '../assets/assets'
 import {useNavigate} from 'react-router-dom'
 import { AppContent } from '../context/AppContext'
@@ -9,8 +9,8 @@ import PropTypes from 'prop-types';
 const Navbar = ({name="Login"}) => {
 
   const navigate = useNavigate()
-  const{userData,backendUrl,setUserData,setIsLoggedin} =useContext(AppContent);
-
+  const{userData,backendUrl,setUserData,setIsLoggedin,isLoggedin} =useContext(AppContent);
+  
   const sendVerificationOtp= async()=>{
     try{
       axios.defaults.withCredentials=true;
@@ -34,6 +34,7 @@ const Navbar = ({name="Login"}) => {
       const{data} = await axios.post(backendUrl+'/api/auth/logout');
       data.success && setIsLoggedin(false);
       data.success && setUserData(false);
+      localStorage.removeItem('user-info');
       toast.success(data.message)
       navigate('/')
     }
@@ -47,10 +48,13 @@ const Navbar = ({name="Login"}) => {
       
       <img onClick={()=>{navigate('/')}} src={assets.logo} alt="logo" className='w-28 sm:w-32'/>
       {userData ? 
-      <div className='w-8 h-8 flex justify-center items-center rounded-full bg-black text-white relative group'>{userData.name[0].toUpperCase()}
+      <div className='w-8 h-8 flex justify-center items-center rounded-full bg-black text-white relative group'>
+        {userData.image ?<img src={userData.image} alt={userData.name[0].toUpperCase()} className="w-8 h-8 rounded-full object-cover border border-gray-200 shadow-sm"/> : userData.name[0].toUpperCase()}
             <div className='absolute hidden group-hover:block top-1 right-0 z-10 text-black rounded pt-10'>
               <ul className='list-none m-0 p-2 bg-gray-100 text-sm text-center'>
-                {!userData.isAccountVerified && <li className='py-1 px-2 hover:bg-gray-200 cursor-pointer whitespace-nowrap' onClick={sendVerificationOtp}>Verify email</li>}
+              <li className='py-1 px-2 hover:bg-gray-200 cursor-pointer'>{userData.email}{userData.isAccountVerified ? "✅" : "❌" }</li>
+
+                {!userData.isAccountVerified && <li className='py-1 px-2 hover:bg-gray-200 cursor-pointer whitespace-nowrap' onClick={sendVerificationOtp}>Verify email 🚀</li>}
                 
                 <li className='py-1 px-2 hover:bg-gray-200 cursor-pointer' onClick={logout}>Logout</li>
               </ul>

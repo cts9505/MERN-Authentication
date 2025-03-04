@@ -8,9 +8,11 @@ import { AppContent } from "../context/AppContext";
 import axios from "axios";
 import {toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useGoogleLogin } from "@react-oauth/google";
+import { googleAuth } from "../context/api.js";
 
 const Login = () => {
-
+  axios.defaults.withCredentials=true;
   const navigate = useNavigate();
   
   const {backendUrl,setIsLoggedin,getUserData} = useContext(AppContent);
@@ -20,7 +22,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isFlipping, setIsFlipping] = useState(false);
-
+  
   const onSubmitHandler = async (e) => {
     try{
     e.preventDefault();
@@ -34,7 +36,11 @@ const Login = () => {
 
     if (response.data.success) {
       setIsLoggedin(true);
-      getUserData();
+      await getUserData();
+      
+      const obj = {email,name};
+      localStorage.setItem('user-info',JSON.stringify(obj));
+      
       toast.success(response.data.message);
       navigate("/");
     } else {
@@ -62,11 +68,43 @@ const Login = () => {
       setIsFlipping(false);
     }, 100); // Matches animation duration
   };
+  
+  const responseGoogle = async (authResult) => {
+    axios.defaults.withCredentials=true;
+    
+		try {
+			if (authResult["code"]) {
+				const result = await googleAuth(authResult.code);
+				
+        setIsLoggedin(true);
+        await getUserData();
+        
+        const {email, name, image} = result.data.user;
+				const token = result.data.token;
+				const obj = {email,name, token, image};
+				localStorage.setItem('user-info',JSON.stringify(obj));
+
+        toast.success(result.data.message);
+				navigate('/');
+			} else {
+				console.log(authResult);
+				throw new Error(authResult);
+			}
+		} catch (e) {
+			console.log('Error while Google Login...', e.message);
+		}
+	};
+
+	const googleLogin = useGoogleLogin({
+    
+		onSuccess: responseGoogle,
+		onError: responseGoogle,
+		flow: "auth-code",
+	});
 
   return (
     <div className="flex items-center justify-center min-h-screen px-6 sm:px-0 bg-gradient-to-b from-gray-300 to bg-gray-200">
       <Navbar name={state === 'Sign Up' ? "Login" : "Sign Up" } />
-
       <div className="relative w-full sm:w-96 h-auto flex justify-center items-center">
         <AnimatePresence mode="wait">
           <motion.div
@@ -129,7 +167,7 @@ const Login = () => {
                 {state}
               </button>
               {state === "Sign Up" ? (
-                <p className="text-center text-xs text-gray-400 mt-4">
+                <p className="text-center text-s text-gray-400 mt-4">
                   Already have an account?{" "}
                   <span onClick={() => toggleState("Login")} className="text-indigo-400 cursor-pointer">
                     Login
@@ -144,6 +182,10 @@ const Login = () => {
                 </p>
               )}
             </form>
+            <h1 className="text-white p-3">OR</h1>
+            <button onClick={googleLogin}>
+              <img src={assets.google} alt="Sign in with Google" className="w-55 h-11 rounded-[7px] cursor-pointer"></img>
+            </button>
           </motion.div>
         </AnimatePresence>
       </div>

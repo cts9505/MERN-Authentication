@@ -4,7 +4,10 @@ import userModel from "../model/model.js";
 import nodemailer from "nodemailer"
 import dotenv from "dotenv"
 import transporter from "../config/mailer.js"
-import { EMAIL_VERIFY_TEMPLATE,PASSWORD_RESET_TEMPLATE,WELCOME_TEMPLATE,MESSAGE_TEMPLATE } from "../config/emailTemplates.js";
+import { EMAIL_VERIFY_TEMPLATE,PASSWORD_RESET_TEMPLATE,WELCOME_TEMPLATE,MESSAGE_TEMPLATE, GOOGLE_TEMPLATE } from "../config/emailTemplates.js";
+import axios from 'axios';
+import { oauth2Client } from '../utils/googleClient.js';
+
 export const register = async (req,res) => {
     const {name,email,password} = req.body;
     if(!name){
@@ -29,7 +32,7 @@ export const register = async (req,res) => {
         res.cookie('token',token,{
             httpOnly:true,
             secure :process.env.NODE_ENV === 'production',
-            sameSite:process.env.NODE_ENV === 'production' ? 'none':'strict',
+            sameSite: 'Lax',
             maxAge:24*60*60*1000
         }) 
         const mailOptions = { 
@@ -66,7 +69,7 @@ export const login = async (req,res) => {
         res.cookie('token',token,{
             httpOnly:true,
             secure :process.env.NODE_ENV === 'production',
-            sameSite:process.env.NODE_ENV === 'production' ? 'none':'strict',
+            sameSite: 'Lax',
             maxAge:24*60*60*1000
         }) 
         return res.json({success:true, message:'User logged in successfully !',user})
@@ -215,3 +218,64 @@ export const sendMessage = async (req,res) => {
         return res.json({success:false,message: error.message})
     }
 }
+
+/* GET Google Authentication API. */
+export const googleAuth = async (req, res) => {
+    const code = req.query.code;
+    try {
+        
+        // Exchange code for tokens
+        const { tokens } = await oauth2Client.getToken(code);
+        oauth2Client.setCredentials(tokens);
+
+        // Fetch user info from Google
+        const userRes = await axios.get(
+            `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`
+        );
+        
+        const { email, name, picture } = userRes.data;
+
+        // Check if the user already exists
+        let user = await userModel.findOne({ email });
+        const existingUser = await userModel.findOne({email});
+        if (!user) {
+            console.log("New User, Creating Account...");
+            user = await userModel.create({
+                name,
+                email,
+                password: null, // No password for Google users
+                isAccountVerified:true,
+                image: picture,
+            });
+        }
+
+        // Generate JWT Token
+        const token = jwt.sign({ id: user._id }, process.env.JWT_KEY, { expiresIn: '24h' });
+
+        // Set Cookie
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Lax',
+            maxAge: 24 * 60 * 60 * 1000,
+        });
+
+        if(!existingUser) {
+
+        // Send Welcome Email
+            const mailOptions = { 
+                from: process.env.SENDER_EMAIL,
+                to: email,
+                subject: 'Welcome to Authentication App',
+                html: GOOGLE_TEMPLATE.replace("{{name}}",user.name).replace("{{email}}",user.email)
+                // text: `<p>Welcome ${name},</p> <p>Your account has been successfully credited with $10Million.</p> <p>If not then contact your executive Jhaat Buddhi</p><p>Yours OHH FACK!!</p>`
+            }
+            await transporter.sendMail(mailOptions);
+        }
+        return res.json({ success: true, message: 'User logged in successfully!', user });
+
+    } catch (err) {
+        console.error("Google Auth Error:", err.message);
+        return res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};

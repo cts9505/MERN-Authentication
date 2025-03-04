@@ -6,25 +6,47 @@ import { AppContent } from '../context/AppContext';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { assets } from '../assets/assets';
+import { useRef } from 'react';
+
 const EmailVerify = () => {
   axios.defaults.withCredentials=true;
   const navigate=useNavigate();
-
-  const{backendUrl,isLoggedin,userData,getUserData}=useContext(AppContent);
+  const firstRender = useRef(true);
   const [otp, setOtp] = useState('');
+
+  const { backendUrl, isLoggedin, userData, getUserData, loading } = useContext(AppContent);
+
+  useEffect(() => {
+    if(isLoggedin){if (firstRender.current) {
+      firstRender.current = false; // ✅ Skip the first render
+      return;
+    }
+    if (loading) return;
+  } // ✅ Prevent running during loading
+
+    if (!isLoggedin || !userData) {  // ✅ Double-check both states
+        toast.error('Please Login to Verify Account!');
+        navigate('/login');
+    } else if (userData?.isAccountVerified) {
+        toast.success('Account already Verified!', { autoClose: 1000 });
+        navigate('/')
+    }
+
+}, [isLoggedin, userData, loading]); 
   
   const handleChange = (e) => {
     let value = e.target.value;
     if (value.length > 6) return; 
     setOtp(value);
   };
+
   const onSubmitHandler = async(e)=>{
     try{
       e.preventDefault();
       const{data}= await axios.post(backendUrl+'/api/auth/verify-otp',{otp})
       if(data.success){
+        await getUserData();
         toast.success(data.message)
-        getUserData()
         navigate('/')
       }else{
         toast.error(data.message)
@@ -34,12 +56,9 @@ const EmailVerify = () => {
       toast.error(error.message)
     }
   }
-  useEffect(()=>{
-    !isLoggedin&&toast.success('Please Login to Verify Account!')&&navigate('/login')
-    isLoggedin&&userData&&userData.isAccountVerified && toast.success('Account already Verified!')&&navigate('/')
-  },[isLoggedin,userData])
+  
   return (
-    <div className='flex items-center justify-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-blue-100 to bg-purple-100'>
+    <div className='flex items-center justify-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-gray-50 to bg-gray-100'>
       <Navbar/>
        <form onSubmit={onSubmitHandler} className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm">
           <h1 className='text-center mb-4 font-semibold text-3xl text-white w-full '>
