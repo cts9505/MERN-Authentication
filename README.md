@@ -1,95 +1,102 @@
-# MERN Authentication System 🚀
+# MERN Authentication App
 
-A secure and scalable **MERN (MongoDB, Express, React, Node.js) authentication system** with **JWT authentication**, **bcrypt password hashing**, and **protected routes**.
+This is a full-stack authentication application built using the MERN stack (MongoDB, Express.js, React, and Node.js). It supports authentication via JWT as well as OAuth using Google.
 
-## 🌟 Features
+## Features
+- User Registration and Login
+- JWT Authentication
+- OAuth Authentication with Google
+- Secure Password Hashing
+- Email Verification (SMTP Support)
+- Environment-based Configuration
 
-👉 **User Authentication** (Register, Login, Logout)  
-👉 **JWT-Based Authentication** (Secure access tokens)  
-👉 **Bcrypt Password Hashing** (Secure user credentials)  
-👉 **Protected Routes** (Access control for authenticated users)  
-👉 **Email Verification** (Send email confirmation on registration)  
-👉 **Responsive UI** (React & Tailwind CSS)  
-👉 **Error Handling & Validation**  
+## Technologies Used
+### Frontend:
+- React (Vite)
+- React Router
+- Axios
+- Tailwind CSS (if used)
 
-## 🛠️ Tech Stack
+### Backend:
+- Node.js
+- Express.js
+- MongoDB (Mongoose ORM)
+- JSON Web Token (JWT)
+- Passport.js (for OAuth)
+- Nodemailer (for email verification)
 
-- **Frontend:** React.js, Axios, React Router, Tailwind CSS  
-- **Backend:** Node.js, Express.js, MongoDB, Mongoose  
-- **Authentication:** JWT (JSON Web Tokens), Bcrypt  
-- **Database:** MongoDB  
-- **API Testing:** Postman  
+## Installation and Setup
 
-## 🚀 Getting Started
+### Prerequisites
+- Node.js (>=14)
+- MongoDB (local or cloud)
 
-### 1️⃣ Clone the Repository
-```sh
+### Clone the Repository
+```bash
 git clone https://github.com/cts9505/MERN-Authentication.git
 cd MERN-Authentication
 ```
 
-### 2️⃣ Install Dependencies  
-#### Backend
-```sh
+### Backend Setup
+```bash
 cd backend
 npm install
 ```
-#### Frontend
-```sh
+
+#### Configure Environment Variables
+Create a `.env` file in the `backend` directory and add the following variables:
+```
+PORT=<your-port>
+MONGO_URL=<your-url>
+JWT_KEY=<your-secret-key>
+NODE_ENV=<your-mode>
+SMTP_HOST=<your-smtp-host>
+SMTP_PORT=<your-port>
+SMTP_USER=<your-smtp-user>
+SMTP_PASS=<your-smtp-password>
+SENDER_EMAIL=<your-email>
+GOOGLE_CLIENT_ID=<your-google-client-id>
+GOOGLE_CLIENT_SECRET=<your-google-client-secret>
+JWT_SECRET=<your-jwt-secret>
+JWT_TIMEOUT=<your-jwt-timeout>
+GEMINI_API_KEY=<your-gemini-api-key>
+```
+
+#### Start the Backend Server
+```bash
+npm start
+```
+
+### Frontend Setup
+```bash
 cd frontend
 npm install
 ```
 
-### 3️⃣ Configure Environment Variables  
-Create a `.env` file in the **backend** folder and add:
-```env
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-NODE_ENV=your_mode
-SMTP_HOST='smtp-relay.brevo.com'
-SMTP_PORT=given_in_website
-SMTP_USER=your_smtp_username
-SMTP_PASS=your_password
-SENDER_EMAIL=your_email
+#### Configure Environment Variables
+Create a `.env` file in the `frontend` directory and add the following variables:
+```
+VITE_BACKEND_URL=<your-backend-url>
+VITE_GOOGLE_CLIENT_ID=<your-google-client-id>
 ```
 
-Create a `.env` file in the **frontend** folder and add:
-```env
-VITE_BACKEND_URL='your_backend_url'
+#### Start the Frontend Server
+```bash
+npm run dev
 ```
-### 4️⃣ Run the Application  
-
-#### Start Backend Server  
-```sh
-cd backend
-npm start
-```
-#### Start Frontend Server  
-```sh
-cd frontend
-npm start
-```
-Your app should be running on `http://localhost:3000` (frontend) and `http://localhost:5000` (backend).  
 
 ## 🔐 API Endpoints
 
-| Method | Route                 | Description            |
+| Method | Route                | Description           |
 |--------|----------------------|------------------------|
-| POST   | `/api/auth/register` | Register a new user   |
+| POST   | `/api/auth/register` | Register a new user    |
 | POST   | `/api/auth/login`    | Login user & get token |
-| GET    | `/api/auth/user`     | Get authenticated user |
-| GET    | `/api/auth/logout`   | Logout user           |
+| GET    | `/api/user/get-data` | Get authenticated user |
+| POST   | `/api/auth/logout`   | Logout user            |
 
-## 🛠️ Future Enhancements  
-- ✅ Role-based authentication (Admin/User)  
-- ✅ Multi-factor authentication (MFA)  
-- ✅ Password reset functionality  
-- ✅ OAuth integration (Google, GitHub)  
+## Contributing
+Feel free to fork the repository and submit pull requests.
 
-## 🙌 Contributing
-Feel free to contribute by submitting pull requests or opening issues.  
-
-## 🐟 License
-This project is **MIT Licensed**.
+## License
+This project is licensed under the MIT License.
 
