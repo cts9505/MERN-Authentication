@@ -33,7 +33,7 @@ This is a **full-stack authentication application** built using the **MERN stack
 🔹 **Node.js** (>=14)  
 🔹 **MongoDB** (local or cloud)  
 
-### 👅 Clone the Repository
+### Clone the Repository
 ```bash
 git clone https://github.com/cts9505/MERN-Authentication.git
 cd MERN-Authentication
